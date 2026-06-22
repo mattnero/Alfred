@@ -20,12 +20,24 @@ The capture helpers (record_turn, wake-word loop) are shared from voice.py; the
 brain wire is SatelliteClient.ask_audio. On a {"display_url": ...} event we just
 print the URL for now — the projector satellite (a Pi kiosk browser pointed at
 the brain's /display/* pages) is a later increment.
+
+A StatusIndicator (status.py) is driven at each transition so a headless Pi can
+show what Alfred is doing — Listening / Thinking / Speaking — on an OLED. On the
+Mac the default console backend just prints those states.
 """
 from __future__ import annotations
 
 import argparse
 
 from satellite import DEFAULT_SERVER, SatelliteClient, SatelliteError
+from status import (
+    ERROR,
+    IDLE,
+    LISTENING,
+    SPEAKING,
+    THINKING,
+    make_indicator,
+)
 from voice import (
     SR,
     TTS_SR,
@@ -50,22 +62,26 @@ def _play(wav_bytes: bytes) -> None:
     sd.wait()
 
 
-def handle_audio(client: SatelliteClient, wav_bytes: bytes) -> None:
+def handle_audio(client: SatelliteClient, wav_bytes: bytes, indicator) -> None:
     """Send captured audio to the brain and speak each sentence as it returns.
 
     The brain streams a leading transcript, then one audio clip per sentence (so
     Alfred starts speaking before the whole reply exists), then an optional
     display_url. We play audio in order as it arrives — synthesis already
-    happened on the brain."""
+    happened on the brain. The indicator shows THINKING (with the transcript)
+    once we know what was heard, then SPEAKING while playing the reply."""
     spoke = False
     for event in client.ask_audio(wav_bytes):
         kind = event[0]
         if kind == "transcript":
             print(f"You: {event[1]}")
             print("Alfred:", end=" ", flush=True)
+            indicator.set_state(THINKING, event[1])
         elif kind == "audio":
             _, sentence, wav = event
             print(sentence, end=" ", flush=True)
+            if not spoke:
+                indicator.set_state(SPEAKING)
             spoke = True
             if wav:
                 _play(wav)
@@ -75,20 +91,23 @@ def handle_audio(client: SatelliteClient, wav_bytes: bytes) -> None:
         print()
 
 
-def push_to_talk_loop(client: SatelliteClient) -> None:
+def push_to_talk_loop(client: SatelliteClient, indicator) -> None:
     print("Alfred voice satellite — push-to-talk. Ctrl+C to quit.")
     while True:
         try:
+            indicator.set_state(LISTENING)
             audio = record_turn()
-            handle_audio(client, encode_wav(audio, SR))
+            handle_audio(client, encode_wav(audio, SR), indicator)
+            indicator.set_state(IDLE)
         except SatelliteError as e:
             print(f"\n(error: {e})")
+            indicator.set_state(ERROR, str(e))
         except KeyboardInterrupt:
             print("\nVery good, sir. Goodbye.")
             break
 
 
-def hands_free_loop(client: SatelliteClient) -> None:
+def hands_free_loop(client: SatelliteClient, indicator) -> None:
     import sounddevice as sd
 
     model, wake_key = load_wake_model()
@@ -96,6 +115,7 @@ def hands_free_loop(client: SatelliteClient) -> None:
     speech_rms = None
     while True:
         try:
+            indicator.set_state(IDLE)
             with sd.InputStream(
                 samplerate=SR, channels=1, dtype="int16", blocksize=WAKE_FRAME
             ) as stream:
@@ -103,15 +123,17 @@ def hands_free_loop(client: SatelliteClient) -> None:
                     speech_rms = calibrate_threshold(stream)
                 listen_for_wake(stream, model, wake_key)
                 print("(wake word detected — listening...)")
+                indicator.set_state(LISTENING)
                 audio = record_command(stream, speech_rms)
             if audio is None:
                 print("(no command heard)")
                 model.reset()
                 continue
-            handle_audio(client, encode_wav(audio, SR))
+            handle_audio(client, encode_wav(audio, SR), indicator)
             model.reset()
         except SatelliteError as e:
             print(f"\n(error: {e})")
+            indicator.set_state(ERROR, str(e))
             model.reset()
         except KeyboardInterrupt:
             print("\nVery good, sir. Goodbye.")
@@ -127,6 +149,12 @@ def main() -> None:
         help="listen for a wake word instead of push-to-talk",
     )
     ap.add_argument("--timeout", type=float, default=60.0, help="request timeout (s)")
+    ap.add_argument(
+        "--indicator",
+        choices=("console", "oled", "none"),
+        default="console",
+        help="state readout: console (default), oled (Pi SSD1306), or none",
+    )
     args = ap.parse_args()
 
     client = SatelliteClient(args.server, timeout=args.timeout)
@@ -136,10 +164,14 @@ def main() -> None:
         raise SystemExit(f"Alfred voice satellite: {e}")
     print(f"Connected to Alfred ({info.get('model')}) at {client.base_url}.")
 
-    if args.hands_free:
-        hands_free_loop(client)
-    else:
-        push_to_talk_loop(client)
+    indicator = make_indicator(args.indicator)
+    try:
+        if args.hands_free:
+            hands_free_loop(client, indicator)
+        else:
+            push_to_talk_loop(client, indicator)
+    finally:
+        indicator.close()
 
 
 if __name__ == "__main__":

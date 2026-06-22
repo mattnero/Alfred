@@ -593,10 +593,11 @@ The Mac-side work that de-risks this runbook is already in the repo:
 | `brain_server.py` | Thin HTTP front door (`POST /chat`, `POST /chat/stream`, `POST /chat/audio`, `GET /health`, `GET /display/calendar`) so satellites reach the central brain and render its visual output — the "central brain + thin satellites" seam. `/chat/audio` is the voice-satellite seam: it does Whisper STT + Kokoro TTS so the satellite stays thin (see Step 8). |
 | `voice.py` | Shared audio toolkit — capture (push-to-talk + wake-word), STT (`make_transcriber`, auto mlx/faster-whisper), TTS (`make_synthesizer`, Kokoro), and the WAV wire (`encode_wav`/`decode_wav`). Factored out of `assistant.py` so the voice app, the brain's audio endpoint, and the voice satellite share one implementation. Every heavy dep is imported lazily *inside* its function, so importing the module costs nothing — a thin satellite never pulls in Whisper/Kokoro. |
 | `satellite.py` | A thin remote front-end: `SatelliteClient` (stdlib `urllib`) + a text REPL that talks to a `brain_server` over the LAN, consuming the streamed reply sentence-by-sentence. `ask_audio(wav)` is the voice seam — POSTs a WAV to `/chat/audio` and yields typed events (`transcript` / `audio` / `display_url`). Advances the locked multi-device goal. Run: `~/assistant-env/bin/python satellite.py --server http://<pc-ip>:8200`. |
-| `voice_satellite.py` | The thin **voice** satellite — mic in, speaker out, brain does the rest. Captures audio, ships the WAV to `/chat/audio`, and plays back the per-sentence audio the brain returns; no Whisper/Kokoro/LLM locally (light deps: `sounddevice`, `numpy`, and for hands-free `openwakeword`/`onnxruntime`). Push-to-talk + `--hands-free` modes, reusing `voice.py` capture. This is the exact program the Pi robot runs; the Mac is the first device to run it. Run: `~/assistant-env/bin/python voice_satellite.py --server http://<pc-ip>:8200`. |
+| `voice_satellite.py` | The thin **voice** satellite — mic in, speaker out, brain does the rest. Captures audio, ships the WAV to `/chat/audio`, and plays back the per-sentence audio the brain returns; no Whisper/Kokoro/LLM locally (light deps: `sounddevice`, `numpy`, and for hands-free `openwakeword`/`onnxruntime`). Push-to-talk + `--hands-free` modes, reusing `voice.py` capture. Drives a `status.py` indicator (`--indicator console|oled|none`) so a headless Pi shows Listening/Thinking/Speaking. This is the exact program the Pi robot runs; the Mac is the first device to run it. Run: `~/assistant-env/bin/python voice_satellite.py --server http://<pc-ip>:8200`. |
+| `status.py` | The satellite's state readout — a `StatusIndicator` abstraction with `make_indicator()` factory and three backends: `ConsoleIndicator` (default, prints state), `NullIndicator` (silent), and `OledIndicator` (SSD1306 I2C via `luma.oled`, lazily imported). Lets a headless Pi show Listening/Thinking(+transcript)/Speaking. All hardware imports are lazy, so it imports cleanly on the Mac (see Step 8 "Status display"). |
 | `web_app.py` | The browser satellite — one self-contained HTML/CSS/JS page (no build step, no deps) served by `brain_server` at `GET /`. Streams Alfred's reply into a chat log and embeds `/display/calendar` in a pane on `display_url`. A stopgap satellite: open it on any phone/tablet on the LAN. Text + show-calendar only (the real voice satellite is `voice_satellite.py`). |
 | `assistant.py` | The voice app, now cross-platform and delegating its brain to `brain.py` and its audio to `voice.py`. Speaks via `speak_stream()` (sentence-by-sentence, synthesis overlapped with playback). |
-| `test_ha_tools.py`, `test_brain.py`, `test_brain_server.py`, `test_google_tools.py`, `test_voice.py` | pytest regression suite (86 tests, no HA/Google/LLM/network/mic/speaker deps — `ollama.chat` is monkeypatched, Google services are injected fakes, the HTTP seam runs on a loopback port, and `/chat/audio` is tested with injected fake STT/TTS over real WAV bytes). Run: `~/assistant-env/bin/python -m pytest -q`. |
+| `test_ha_tools.py`, `test_brain.py`, `test_brain_server.py`, `test_google_tools.py`, `test_voice.py`, `test_status.py`, `test_voice_satellite.py` | pytest regression suite (95 tests, no HA/Google/LLM/network/mic/speaker/display deps — `ollama.chat` is monkeypatched, Google services are injected fakes, the HTTP seam runs on a loopback port, `/chat/audio` is tested with injected fake STT/TTS over real WAV bytes, and the satellite's indicator wiring is driven with a fake client + fake indicator). Run: `~/assistant-env/bin/python -m pytest -q`. |
 
 ### Step 5 — Where this leaves the architecture
 
@@ -704,6 +705,7 @@ Empty speech is a normal `200` with a transcript-only line and no sentences. STT
 | Active cooler + 27W USB-C PD PSU | Thermal + power | ~$25 | Pi 5 needs active cooling and the official 27W supply. |
 | microSD (32GB+) or NVMe HAT + SSD | OS/storage | ~$10–60 | SD is fine for a thin client; NVMe is nicer but optional. |
 | **USB speakerphone with hardware AEC** (Anker PowerConf class) | Mic + speaker + echo cancel in one | ~$80–130 | Same lesson as Phase 1: hardware AEC stops Alfred's voice re-triggering the mic. The single most important part. |
+| **SSD1306 0.96" I2C OLED** + 4 female-female jumper wires | Headless state readout (Listening/Thinking/Speaking) | ~$5–8 | Wires to 3V3/GND/SDA/SCL; driven by `status.py` via `--indicator oled`. See "Status display (OLED)" below. |
 | Small case / enclosure | Body | ~$10–30 | The "robot" shell; expand in Phase 2. |
 
 Projector is **deferred** — not on this list.
@@ -719,7 +721,7 @@ Projector is **deferred** — not on this list.
    pip install sounddevice numpy soundfile openwakeword onnxruntime   # light deps only
    ```
    (No `kokoro`, no `mlx-whisper`/`faster-whisper`, no `ollama` — those live on the brain.)
-3. Copy `voice.py`, `satellite.py`, and `voice_satellite.py` to the Pi (the only files it needs).
+3. Copy `voice.py`, `satellite.py`, `status.py`, and `voice_satellite.py` to the Pi (the only files it needs).
 4. Run it, pointed at the brain:
    ```bash
    ~/assistant-env/bin/python voice_satellite.py --server http://<pc-ip>:8200 --hands-free
@@ -742,6 +744,33 @@ Projector is **deferred** — not on this list.
    systemctl --user enable --now alfred-satellite
    loginctl enable-linger "$USER"   # start at boot without a login session
    ```
+
+#### Status display (OLED) — see what Alfred is doing on a headless Pi
+
+The Mac satellite prints its state to the terminal, but the Pi is headless — when you talk to it you can't tell whether it heard you, is thinking, is speaking, or has crashed. A tiny **0.96" SSD1306 I2C OLED** fixes that: it shows the live state (and the transcript of what was heard) in words.
+
+`status.py` provides the abstraction with three backends, chosen by `--indicator`:
+
+| `--indicator` | Backend | Use |
+|---|---|---|
+| `console` (default) | prints `[STATE] detail` | Mac, debugging, no hardware |
+| `oled` | SSD1306 over I2C via `luma.oled` | the Pi robot |
+| `none` | silent no-op | headless with no readout wanted |
+
+States shown: **Alfred/ready** (idle) → **Listening** (recording you) → **Thinking** + your transcript (brain working) → **Speaking** (playing the reply) → back to idle; **Error** on a failure. All `luma.*` imports are lazy, so `status.py` and the satellite import cleanly on the Mac; if the panel can't be opened the OLED backend degrades to console rather than crashing the loop.
+
+*Why an OLED and not an LED strip:* the Pi 5's RP1 I/O chip breaks the RPi.GPIO / WS2812 (NeoPixel) timing libraries, so addressable LEDs are fiddly there. **I2C is unaffected**, and an I2C OLED can show words, not just a colour.
+
+**Wiring (4 jumper wires):** OLED `VCC → Pi 3V3 (pin 1)`, `GND → GND (pin 6)`, `SDA → GPIO2 (pin 3)`, `SCL → GPIO3 (pin 5)`. Default I2C bus `1`, address `0x3C`.
+
+**Enable + run:**
+```bash
+sudo raspi-config       # Interface Options → I2C → enable, then reboot
+source ~/assistant-env/bin/activate
+pip install luma.oled   # Pi only; not needed on the Mac
+~/assistant-env/bin/python voice_satellite.py --server http://<pc-ip>:8200 --hands-free --indicator oled
+```
+(Add `--indicator oled` to the systemd `ExecStart` above to keep the display on at boot.)
 
 #### Increment — the projector (deferred)
 
