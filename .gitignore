@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Trained wake-word models (large binaries; train + drop in locally)
+models/*.onnx
+
+# Home Assistant container config (created by `docker run -v ./ha-config`)
+ha-config/
+
+# Secrets / personal data — these normally live in ~/.alfred (outside the repo),
+# but ignore them here too in case anything is ever copied in by mistake.
+*google_credentials*.json
+*google_token*.json
+*token*.json
+profile.md
+.env
+
+# Local audio scratch
+*.wav
+
+# OS cruft
+.DS_Store
+Thumbs.db
