@@ -1,0 +1,34 @@
+README.md
+  s_beb15b70cd1658::t_9274b1c1904a64 600
+  s_beb15b70cd1658::t_3e04658d31d712 724
+  s_beb15b70cd1658::t_e8d0fa4babd54c 596-597
+  s_beb15b70cd1658::t_4a7112c763c20b 708
+  s_beb15b70cd1658::t_9ea4ee23185426 748-774
+test_voice_satellite.py
+  s_beb15b70cd1658::t_e829382b38ad2a 1-66
+voice_satellite.py
+  s_beb15b70cd1658::t_d9313e53886162 23-26,33-40
+  s_beb15b70cd1658::t_ac95dd2cee48db 65,71-72,79,83-84
+  s_beb15b70cd1658::t_6fdc107a5efde4 152-157,167-174
+  s_beb15b70cd1658::t_5fb61c338b264d 94,98,100-101,104,110,118,126,132,136
+status.py
+  s_beb15b70cd1658::t_9111ddff03616e 1-116
+test_status.py
+  s_beb15b70cd1658::t_4bb2f5e2f0de38 1-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.10",
+  "base_commit_sha": "e519e9a713e3e7dd4ce7e4afae121e147aa045ac",
+  "prompts": {},
+  "sessions": {
+    "s_beb15b70cd1658": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "16bc391d-d425-46ca-bf6a-0ffa71dff02e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Matt Nero <matt.nero.22@gmail.com>"
+    }
+  }
+}
