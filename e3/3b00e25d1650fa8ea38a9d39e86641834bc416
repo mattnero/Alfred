@@ -1,0 +1,19 @@
+README.md
+  s_beb15b70cd1658::t_b9a7628b6c2468 702-704,706-711
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.10",
+  "base_commit_sha": "e33b00e25d1650fa8ea38a9d39e86641834bc416",
+  "prompts": {},
+  "sessions": {
+    "s_beb15b70cd1658": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "16bc391d-d425-46ca-bf6a-0ffa71dff02e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Matt Nero <matt.nero.22@gmail.com>"
+    }
+  }
+}
