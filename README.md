@@ -699,14 +699,16 @@ Empty speech is a normal `200` with a transcript-only line and no sentences. STT
 
 **Shopping list (voice satellite):**
 
-| Item | Purpose | Est. Cost (USD) | Notes |
+Links are **Canadian sources** ([PiShop.ca](https://www.pishop.ca/) is the official Canadian Raspberry Pi reseller — it carries the board, cooler, PSU, SD, and jumper wires in one order).
+
+| Item | Purpose | Est. Cost (CAD) | Where to buy (Canada) |
 |------|---------|-----------------|-------|
-| Raspberry Pi 5 (4GB is plenty; 8GB fine) | The satellite compute | ~$60–80 | It's *thin* — no LLM/STT/TTS runs here, so RAM/GPU don't matter much. |
-| Active cooler + 27W USB-C PD PSU | Thermal + power | ~$25 | Pi 5 needs active cooling and the official 27W supply. |
-| microSD (32GB+) or NVMe HAT + SSD | OS/storage | ~$10–60 | SD is fine for a thin client; NVMe is nicer but optional. |
-| **USB speakerphone with hardware AEC** (Anker PowerConf class) | Mic + speaker + echo cancel in one | ~$80–130 | Same lesson as Phase 1: hardware AEC stops Alfred's voice re-triggering the mic. The single most important part. |
-| **SSD1306 0.96" I2C OLED** + 4 female-female jumper wires | Headless state readout (Listening/Thinking/Speaking) | ~$5–8 | Wires to 3V3/GND/SDA/SCL; driven by `status.py` via `--indicator oled`. See "Status display (OLED)" below. |
-| Small case / enclosure | Body | ~$10–30 | The "robot" shell; expand in Phase 2. |
+| Raspberry Pi 5 (4GB is plenty; 8GB fine) | The satellite compute | ~$90–120 | [PiShop.ca 4GB](https://www.pishop.ca/product/raspberry-pi-5-4gb/) · [8GB](https://www.pishop.ca/product/raspberry-pi-5-8gb/). It's *thin* — no LLM/STT/TTS runs here, so RAM/GPU don't matter much. |
+| Active cooler + 27W USB-C PD PSU | Thermal + power | ~$35 | [PiShop.ca active cooler](https://www.pishop.ca/product/raspberry-pi-active-cooler/) + 27W PSU ([Pi accessories](https://www.pishop.ca/product-category/raspberry-pi/)). Pi 5 needs active cooling and the official 27W supply. |
+| microSD (32GB+) or NVMe HAT + SSD | OS/storage | ~$15–80 | PiShop.ca / Amazon.ca. SD is fine for a thin client; NVMe is nicer but optional. **Or skip these three rows** with the [PiShop.ca Pi 5 Desktop Kit](https://www.pishop.ca/product/raspberry-pi-5-desktop-kit-us/) (board+cooler+PSU+SD). |
+| **USB speakerphone with hardware AEC** (Anker PowerConf class) | Mic + speaker + echo cancel in one | ~$110–180 | [AnkerWork CA — PowerConf S330](https://ca.ankerwork.com/products/a3308) · [Amazon.ca](https://www.amazon.ca/Anker-Speakerphone-Conference-Enhancement-Microphones/dp/B09FJ7LWX4). Hardware AEC stops Alfred's voice re-triggering the mic — the single most important part. |
+| **SSD1306 0.96" I2C OLED** + 4 female-female jumper wires | Headless state readout (Listening/Thinking/Speaking) | ~$8–12 | [Canada Robotix](https://www.canadarobotix.com/products/2006) · [Universal-Solder](https://www.universal-solder.ca/product/oled-i2c-0-96-inch-128x64-pixel-ssd1306-sh1106-3-5v/) · [CANADUINO on Amazon.ca](https://www.amazon.ca/CANADUINO-OLED-Display-128x64-Pixel/dp/B077D4RQG1). **Get the I2C (4-pin) SSD1306 variant** (addr `0x3C`) — not SPI. Wires to 3V3/GND/SDA/SCL; driven by `status.py` via `--indicator oled`. See "Status display (OLED)" below. |
+| Small case / enclosure | Body | ~$15–40 | PiShop.ca / Amazon.ca. The "robot" shell; expand in Phase 2. |
 
 Projector is **deferred** — not on this list.
 
