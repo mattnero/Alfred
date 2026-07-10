@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center_horizontal">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name"
+        android:textSize="26sp"
+        android:layout_marginBottom="24dp" />
+
+    <EditText
+        android:id="@+id/serverUrl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/server_hint"
+        android:inputType="textUri"
+        android:autofillHints="off"
+        android:importantForAutofill="no"
+        android:layout_marginBottom="12dp" />
+
+    <EditText
+        android:id="@+id/accessKey"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/access_key_hint"
+        android:inputType="textNoSuggestions"
+        android:autofillHints="off"
+        android:importantForAutofill="no"
+        android:layout_marginBottom="24dp" />
+
+    <Button
+        android:id="@+id/toggle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/start" />
+
+    <TextView
+        android:id="@+id/status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:textSize="16sp"
+        android:text="@string/status_idle" />
+
+    <TextView
+        android:id="@+id/health"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textSize="13sp"
+        android:alpha="0.7" />
+
+</LinearLayout>
