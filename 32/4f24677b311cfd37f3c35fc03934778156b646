@@ -1,0 +1,42 @@
+android-satellite/app/src/main/java/com/alfred/satellite/MainActivity.kt
+  s_f67a659fd86e14::t_f5e7a65187698d 41
+  s_f67a659fd86e14::t_d9023789041ad8 86
+android-satellite/app/src/main/java/com/alfred/satellite/AudioPlayer.kt
+  s_f67a659fd86e14::t_2670ee4edf5504 82
+android-satellite/app/src/main/java/com/alfred/satellite/AudioRecorder.kt
+  s_f67a659fd86e14::t_4faab2c7f82ce0 26
+  s_f67a659fd86e14::t_d7a015be6670e3 109
+  s_f67a659fd86e14::t_1568ef4f2aefbb 74,90,97,99
+android-satellite/app/src/main/java/com/alfred/satellite/SatelliteService.kt
+  s_f67a659fd86e14::t_348d782b54141b 35,50
+  s_f67a659fd86e14::t_07456f8647436c 136
+  s_f67a659fd86e14::t_13065fbf9a2669 82
+  s_f67a659fd86e14::t_b560279a8bdbaa 152-154
+  s_d28165dda4a412::t_fbcda8bb2ed5c6 51
+android-satellite/app/src/main/java/com/alfred/satellite/WakeListener.kt
+  s_f67a659fd86e14::t_afff153f00223c 23,26,28,39,44,46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "324f24677b311cfd37f3c35fc03934778156b646",
+  "prompts": {},
+  "sessions": {
+    "s_d28165dda4a412": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "624a3b86-8356-4cbe-b7c7-4a356c5d7ce6",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Matt Nero <matt.nero.22@gmail.com>"
+    },
+    "s_f67a659fd86e14": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ee0dbfa2-2c2a-49b5-b4dd-84d50d53b1db",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Matt Nero <matt.nero.22@gmail.com>"
+    }
+  }
+}
