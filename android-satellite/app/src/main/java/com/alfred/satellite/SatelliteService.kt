@@ -32,6 +32,7 @@ class SatelliteService : Service() {
 
     private val turns = Executors.newSingleThreadExecutor()
     private val busy = AtomicBoolean(false)
+    private var running = false
 
     private lateinit var wake: WakeListener
     private lateinit var brain: BrainClient
@@ -45,6 +46,8 @@ class SatelliteService : Service() {
             stopSelf()
             return START_NOT_STICKY
         }
+
+        if (running) return START_STICKY
 
         startForegroundNotification()
 
@@ -76,6 +79,7 @@ class SatelliteService : Service() {
         try {
             wake.start()
             SatelliteState.update(State.IDLE, "Say “Jarvis”")
+            running = true
         } catch (e: Exception) {
             SatelliteState.update(State.ERROR, e.message ?: "wake-word init failed")
             stopSelf()
@@ -129,6 +133,7 @@ class SatelliteService : Service() {
             if (speaking) player.finish()
         } catch (e: Exception) {
             lastError = e.message ?: "error"
+            runCatching { player.abort() }
         } finally {
             runCatching { wake.start() }
             if (lastError != null) {
@@ -144,7 +149,9 @@ class SatelliteService : Service() {
         runCatching { recorder.cancel() }
         runCatching { wake.release() }
         turns.shutdownNow()
-        SatelliteState.update(State.STOPPED, "")
+        if (SatelliteState.state != State.ERROR) {
+            SatelliteState.update(State.STOPPED, "")
+        }
         super.onDestroy()
     }
 

@@ -23,7 +23,7 @@ class AudioRecorder {
         private const val SILENCE_HANG_MS = 800       // trailing silence ends the turn
         private const val MAX_SPEECH_MS = 10_000      // hard cap
         private const val START_TIMEOUT_MS = 6_000    // give up if no speech begins
-        private const val MIN_SPEECH_MS = 300         // ignore a lone click
+        private const val MIN_SPEECH_MS = 300         // minimum voiced milliseconds
         private const val THRESHOLD_FACTOR = 3.5      // speech = this * noise floor
         private const val MIN_THRESHOLD = 500.0       // floor for a very quiet room
     }
@@ -71,6 +71,7 @@ class AudioRecorder {
             var speechStarted = false
             var elapsedMs = 0.0
             var speechMs = 0.0
+            var voicedMs = 0.0
             var silenceMs = 0.0
             val frameMs = FRAME.toDouble() / SAMPLE_RATE * 1000
 
@@ -86,14 +87,16 @@ class AudioRecorder {
                         speechStarted = true
                         appendFrame(pcm, buf, n)
                         speechMs += frameMs
+                        voicedMs += frameMs
                     } else if (elapsedMs >= START_TIMEOUT_MS) {
                         break  // nobody spoke
                     }
                 } else {
                     appendFrame(pcm, buf, n)
                     speechMs += frameMs
+                    if (voiced) voicedMs += frameMs
                     silenceMs = if (voiced) 0.0 else silenceMs + frameMs
-                    if (silenceMs >= SILENCE_HANG_MS && speechMs >= MIN_SPEECH_MS) break
+                    if (silenceMs >= SILENCE_HANG_MS) break
                     if (speechMs >= MAX_SPEECH_MS) break
                 }
             }
@@ -103,7 +106,7 @@ class AudioRecorder {
         }
 
         val bytes = pcm.toByteArray()
-        if (cancelled || bytes.isEmpty()) return null
+        if (cancelled || bytes.isEmpty() || voicedMs < MIN_SPEECH_MS) return null
         return wrapWav(bytes)
     }
 

@@ -20,9 +20,12 @@ class WakeListener(
     private val onWake: () -> Unit,
 ) {
     private var manager: PorcupineManager? = null
+    private var released = false
 
     /** Builds on first call. Throws PorcupineException on a bad key / activation. */
+    @Synchronized
     fun start() {
+        if (released) return
         if (manager == null) {
             manager = PorcupineManager.Builder()
                 .setAccessKey(accessKey)
@@ -33,11 +36,14 @@ class WakeListener(
         manager?.start()
     }
 
+    @Synchronized
     fun stop() {
         runCatching { manager?.stop() }
     }
 
+    @Synchronized
     fun release() {
+        released = true
         manager?.let {
             runCatching { it.stop() }
             runCatching { it.delete() }

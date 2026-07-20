@@ -79,6 +79,7 @@ class AudioPlayer {
                 ((wav[i + 6].toInt() and 0xFF) shl 16) or
                 ((wav[i + 7].toInt() and 0xFF) shl 24)
             if (id == "data") return i + 8
+            if (size < 0) break
             i += 8 + size + (size and 1)  // chunks are word-aligned
         }
         return minOf(44, wav.size)

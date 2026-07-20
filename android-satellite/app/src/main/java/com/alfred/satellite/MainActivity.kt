@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
         binding.accessKey.setText(prefs.accessKey)
 
         binding.toggle.setOnClickListener {
-            if (SatelliteState.state == State.STOPPED) start() else stop()
+            if (SatelliteState.state == State.STOPPED || SatelliteState.state == State.ERROR) start() else stop()
         }
     }
 
@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun render(state: State, detail: String, health: String) {
-        binding.toggle.text = getString(if (state == State.STOPPED) R.string.start else R.string.stop)
+        binding.toggle.text = getString(if (state == State.STOPPED || state == State.ERROR) R.string.start else R.string.stop)
         val label = when (state) {
             State.STOPPED -> getString(R.string.status_idle)
             State.IDLE -> "Idle — ${detail.ifBlank { "listening for the wake word" }}"
