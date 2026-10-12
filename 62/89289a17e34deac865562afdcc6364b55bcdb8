@@ -1,0 +1,25 @@
+brain.py
+  s_3bfb1a08b87010::t_378d780b74e736 385
+test_ha_tools.py
+  s_3bfb1a08b87010::t_f34cbf50e95323 166-197
+ha_tools.py
+  s_3bfb1a08b87010::t_c0b404f8f76dd7 333-342
+brain_server.py
+  s_3bfb1a08b87010::t_29f89f42f26f18 254-264
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6289289a17e34deac865562afdcc6364b55bcdb8",
+  "prompts": {},
+  "sessions": {
+    "s_3bfb1a08b87010": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "45d12854-6873-44b3-8ca8-2df3fe006797",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Matt Nero <matt.nero.22@gmail.com>"
+    }
+  }
+}
