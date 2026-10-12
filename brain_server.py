@@ -251,6 +251,17 @@ def main() -> None:
 
     url, token = os.environ.get("HA_URL", ""), os.environ.get("HA_TOKEN", "")
     ha_client = WebSocketHAClient(url, token) if url and token else None
+    # Prove the HA link at startup — otherwise a missing env var or bad token
+    # only shows up as Alfred insisting he has no home control.
+    if ha_client:
+        try:
+            print(f"Home Assistant: connected to {url} ({len(ha_client.get_states())} entities).")
+        except Exception as e:  # noqa: BLE001 - keep serving chat; the model sees errors per call
+            print(f"Home Assistant: FAILED to connect to {url}: {e}")
+    else:
+        missing = [n for n, v in (("HA_URL", url), ("HA_TOKEN", token)) if not v]
+        print(f"Home Assistant: OFF — {' and '.join(missing)} not set in this window "
+              "(after setx, open a NEW window).")
 
     # Calendar/Tasks: the real OAuth-backed GoogleAPIClient is used when a stored
     # token exists (created once by authorize_google.py on the brain). Otherwise

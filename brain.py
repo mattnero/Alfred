@@ -382,6 +382,7 @@ class Brain:
                         args = {}
                 client, fn = self._tool_routes.get(name, (None, None))
                 result = fn(client, name, args) if fn else {"error": f"unknown tool: {name}"}
+                print(f"  [tool] {name}({json.dumps(args)}) -> {json.dumps(result)[:200]}", flush=True)
                 if isinstance(result, dict) and result.get("display_url"):
                     self.last_display = {
                         "type": "calendar",

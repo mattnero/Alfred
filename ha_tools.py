@@ -330,6 +330,16 @@ class WebSocketHAClient:
         entity_id: Optional[str] = None,
         data: Optional[dict] = None,
     ) -> dict:
+        # HA reports success even for an entity that doesn't exist (or a
+        # light.turn_on aimed at an input_boolean), so the model would happily
+        # claim it worked. Validate first and correct the domain for on/off.
+        if entity_id and entity_id != "all":
+            known = {s["entity_id"] for s in self._command({"type": "get_states"})}
+            if entity_id not in known:
+                return {"error": f"no entity '{entity_id}' — call get_states to find the right entity_id"}
+            entity_domain = entity_id.split(".")[0]
+            if entity_domain != domain and service in ("turn_on", "turn_off", "toggle"):
+                domain = entity_domain
         payload = {"type": "call_service", "domain": domain, "service": service}
         if entity_id:
             payload["target"] = {"entity_id": entity_id}

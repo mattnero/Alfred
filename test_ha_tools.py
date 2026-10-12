@@ -163,3 +163,35 @@ def test_ws_command_raises_after_persistent_failure(monkeypatch):
     except RuntimeError as e:
         assert "connection lost" in str(e).lower()
     assert connects["n"] == 2  # initial attempt + one retry
+
+
+class _RecordingWS(_FakeWS):
+    """_FakeWS that remembers every command sent."""
+
+    def __init__(self, result=None):
+        super().__init__(result=result)
+        self.sent: list[dict] = []
+
+    def send(self, data: str) -> None:
+        self.sent.append(json.loads(data))
+        super().send(data)
+
+
+_HELPER_STATES = [{"entity_id": "input_boolean.office_light", "state": "off", "attributes": {}}]
+
+
+def test_ws_call_service_unknown_entity_returns_error_without_calling(monkeypatch):
+    ws = _RecordingWS(result=_HELPER_STATES)
+    c, _ = _client_with_fake_connect(monkeypatch, lambda n: ws)
+    out = c.call_service("light", "turn_on", entity_id="light.office_light")
+    assert "error" in out and "get_states" in out["error"]
+    assert [m["type"] for m in ws.sent] == ["get_states"]  # never reached call_service
+
+
+def test_ws_call_service_corrects_domain_for_on_off(monkeypatch):
+    ws = _RecordingWS(result=_HELPER_STATES)
+    c, _ = _client_with_fake_connect(monkeypatch, lambda n: ws)
+    c.call_service("light", "turn_on", entity_id="input_boolean.office_light")
+    call = ws.sent[-1]
+    assert call["type"] == "call_service"
+    assert call["domain"] == "input_boolean" and call["service"] == "turn_on"
